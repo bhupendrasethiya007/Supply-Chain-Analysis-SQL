@@ -1,5 +1,16 @@
 # Retail & Supply Chain Analytics
 
+## Table of Contents
+
+* [Project Overview](#project-overview)
+* [Dataset Information](#dataset-information)
+* [Business Problems](#business-problems)
+* [SQL Concepts Used](#sql-concepts-used)
+* [Business Impact](#business-impact)
+* [Project Structure](#project-structure)
+* [Author](#author)
+
+
 ## Project Overview
 
 This project focuses on analyzing retail sales and supply chain performance using PostgreSQL. The objective is to uncover business insights related to sales growth, profitability, customer behavior, product returns, shipping performance, and customer retention.
