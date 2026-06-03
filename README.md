@@ -7,8 +7,10 @@
 * [Business Problems](#business-problems)
 * [SQL Concepts Used](#sql-concepts-used)
 * [Business Impact](#business-impact)
+* [Technologies Uesd](#technologies-used)
 * [Project Structure](#project-structure)
 * [Author](#author)
+
 
 
 ## Project Overview
@@ -16,13 +18,46 @@
 This project focuses on analyzing retail sales and supply chain performance using PostgreSQL. The objective is to uncover business insights related to sales growth, profitability, customer behavior, product returns, shipping performance, and customer retention.
 
 ---
-
 ## Dataset Information
 
-This project uses two datasets:
+### sales_data1 (Fact Table)
 
-* **sales_data1** containing **23 columns** and **9,900+ retail sales records**.
-* **date_dimension** containing **13 columns** and used for time-series analysis such as YoY, MoM, and trend analysis.
+**Rows:** 9,900+
+**Columns:** 23
+
+| Column Name         | Description                |
+| ------------------- | -------------------------- |
+| row_id              | Unique row identifier      |
+| order_id            | Unique order identifier    |
+| order_date          | Order placement date       |
+| ship_date           | Product shipping date      |
+| ship_mode           | Shipping method used       |
+| customer_id         | Unique customer identifier |
+| customer_name       | Customer name              |
+| segment             | Customer segment           |
+| country             | Country                    |
+| city                | Customer city              |
+| state               | Customer state             |
+| postal_code         | Postal code                |
+| region              | Sales region               |
+| retail_sales_people | Sales representative       |
+| product_id          | Unique product identifier  |
+| category            | Product category           |
+| sub_category        | Product sub-category       |
+| product_name        | Product name               |
+| returned            | Return status (Yes/No)     |
+| sales               | Sales amount               |
+| quantity            | Quantity ordered           |
+| discount            | Discount applied           |
+| profit              | Profit earned              |
+
+### date_dimension (Dimension Table)
+
+**Rows:** 1,600+
+**Columns:** 13
+
+*Contains calendar attributes used for time-series analysis such as Year-over-Year (YoY), Month-over-Month (MoM), quarterly trends, and rolling averages.*
+
 
 ---
 
@@ -99,6 +134,11 @@ This project uses two datasets:
 * **Late deliveries had a return rate of 7.60%**, while **on-time deliveries recorded a return rate of 8.69%**.
 
 ---
+## Technologies Used
+
+* **Excel** - Data cleaning 
+* **PostgreSQL** – Database management and data analysis.
+* **GitHub** – Version control and project documentation.
 
 ## Project Structure
 
