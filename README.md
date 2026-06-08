@@ -247,6 +247,178 @@ FROM sales_data1
 GROUP BY retail_sales_people
 ORDER BY profit_margin;
 ```
+# Module 4: Advanced Analytics (Window Functions & CTEs)
+
+## 10. Pareto Principle (80/20 Rule)
+
+**Business Question:** Do the top customers contribute 80% of total sales? Use cumulative sales and cumulative percentage to identify the customers responsible for 80% of revenue.
+
+```sql
+WITH top_10_cust AS (
+    SELECT customer_id,
+           customer_name,
+           SUM(sales) AS total_sales
+    FROM sales_data1
+    GROUP BY customer_id, customer_name
+),
+rank_customers AS (
+    SELECT customer_id,
+           customer_name,
+           total_sales,
+           SUM(total_sales) OVER(ORDER BY total_sales DESC) AS running_sum,
+           SUM(total_sales) OVER() AS overall_sales
+    FROM top_10_cust
+)
+SELECT *
+FROM (
+    SELECT *,
+           ROUND(running_sum * 100.0 / overall_sales, 2) AS cumulative_percentage
+    FROM rank_customers
+) t
+WHERE cumulative_percentage <= 80
+ORDER BY total_sales DESC;
+```
+
+---
+
+## 11. Customer Churn Analysis
+
+**Business Question:** Which customers purchased during 2015 and 2016 but did not make any purchase in 2017?
+
+```sql
+WITH customer_churn AS (
+    SELECT d.year_,
+           s.customer_id
+    FROM sales_data1 s
+    JOIN date_dimension d
+    ON s.order_date = d.date_
+    GROUP BY d.year_, s.customer_id
+)
+
+SELECT DISTINCT customer_id
+FROM customer_churn
+WHERE customer_id IN (
+    SELECT customer_id
+    FROM customer_churn
+    WHERE year_ IN (2015, 2016)
+)
+AND customer_id NOT IN (
+    SELECT customer_id
+    FROM customer_churn
+    WHERE year_ = 2017
+);
+```
+
+---
+
+## 12. 30-Day Moving Average
+
+**Business Question:** What is the 30-day rolling average of daily sales?
+
+```sql
+WITH daily_sales AS (
+    SELECT d.date_,
+           SUM(s.sales) AS total_sales
+    FROM sales_data1 s
+    JOIN date_dimension d
+    ON s.order_date = d.date_
+    GROUP BY d.date_
+)
+
+SELECT date_,
+       total_sales,
+       ROUND(
+           AVG(total_sales) OVER (
+               ORDER BY date_
+               ROWS BETWEEN 29 PRECEDING AND CURRENT ROW
+           ),
+           2
+       ) AS rolling_30_day_avg
+FROM daily_sales
+ORDER BY date_;
+```
+
+---
+
+## 13. Customer Segmentation (Mini RFM)
+
+**Business Question:** Classify customers as VIP, Regular, or One-Time Buyers based on purchase behavior.
+
+```sql
+SELECT customer_id,
+       customer_name,
+       COUNT(DISTINCT order_id) AS total_orders,
+       CASE
+           WHEN COUNT(DISTINCT order_id) = 1
+                THEN 'One-Time Buyer'
+           WHEN SUM(sales) > 5000
+                THEN 'VIP'
+           ELSE 'Regular'
+       END AS customer_segment
+FROM sales_data1
+GROUP BY customer_id, customer_name;
+```
+
+---
+
+## 14. Month-over-Month (MoM) Growth
+
+**Business Question:** What is the monthly sales growth percentage compared to the previous month?
+
+```sql
+WITH monthly_sales AS (
+    SELECT d.year_,
+           d.month_num,
+           SUM(s.sales) AS total_sales
+    FROM sales_data1 s
+    JOIN date_dimension d
+    ON s.order_date = d.date_
+    GROUP BY d.year_, d.month_num
+),
+previous_month_sales AS (
+    SELECT year_,
+           month_num,
+           total_sales,
+           LAG(total_sales) OVER (
+               ORDER BY year_, month_num
+           ) AS previous_sales
+    FROM monthly_sales
+)
+
+SELECT *,
+       ROUND(
+           ((total_sales - previous_sales) /
+            previous_sales) * 100,
+           2
+       ) AS mom_growth_percentage
+FROM previous_month_sales;
+```
+
+---
+
+## 15. Most Profitable Route
+
+**Business Question:** Which city and state combinations generate the highest profit per order?
+
+```sql
+WITH most_profitable AS (
+    SELECT state1,
+           city,
+           COUNT(order_id) AS total_orders,
+           SUM(profit) AS total_profit,
+           ROUND(
+               SUM(profit) / COUNT(order_id),
+               2
+           ) AS profit_per_order
+    FROM sales_data1
+    GROUP BY state1, city
+    HAVING COUNT(order_id) >= 10
+)
+
+SELECT *
+FROM most_profitable
+ORDER BY profit_per_order DESC;
+```
 
 ---
 
