@@ -4,7 +4,7 @@
 
 * [Project Overview](#project-overview)
 * [Dataset Information](#dataset-information)
-* [Business Problems](#business-problems)
+* [SQL Analysis Questions & Queries](#sql-analysis-questions--queries)
 * [SQL Concepts Used](#sql-concepts-used)
 * [Business Impact](#business-impact)
 * [Technologies Uesd](#technologies-used)
@@ -61,37 +61,192 @@ This project focuses on analyzing retail sales and supply chain performance usin
 
 ---
 
-## Business Problems
+## SQL Analysis Questions & Queries
 
- Q1. Year-over-Year (YoY) Sales and Profit Analysis
+## Module 1: Basics & Time Series Analysis
 
- Q2. Day-wise Sales and Return Analysis
+### 1. Year-over-Year Total Sales and Profit
 
- Q3. Best Performing Quarter
+**Business Question:** What are the total sales and total profit generated each year?
 
- Q4. Discount Impact Analysis
+```sql
+SELECT d.year_,
+       SUM(s.sales) AS total_sales,
+       SUM(s.profit) AS total_profit
+FROM date_dimension d
+JOIN sales_data1 s
+ON d.date_ = s.order_date
+GROUP BY d.year_
+ORDER BY d.year_;
+```
 
- Q5. Regional Return Rate Analysis
+---
 
- Q6. Top 10 Loss-Making Customers
+### 2. Seasonality Analysis (Weekend Effect)
 
- Q7. Average Delivery Time by Ship Mode
+**Business Question:** On which day of the week are the highest sales generated and the highest returns recorded?
 
- Q8. Late Delivery vs Product Returns
+```sql
+SELECT d.day_name,
+       SUM(s.sales) AS total_sales,
+       SUM(
+           CASE
+               WHEN s.returned = 'Yes' THEN 1
+               ELSE 0
+           END
+       ) AS total_returns
+FROM sales_data1 s
+JOIN date_dimension d
+ON s.order_date = d.date_
+GROUP BY d.day_name
+ORDER BY total_sales DESC;
+```
 
- Q9. Salesperson Performance Analysis
+---
 
- Q10. Pareto Principle (80/20 Rule)
+### 3. Best Performing Quarter
 
- Q11. Customer Churn Analysis
+**Business Question:** Which quarter generated the highest sales?
 
- Q12. 30-Day Rolling Average Analysis
+```sql
+SELECT d.quarter_year,
+       SUM(s.sales) AS total_sales
+FROM sales_data1 s
+JOIN date_dimension d
+ON s.order_date = d.date_
+GROUP BY d.quarter_year
+ORDER BY total_sales DESC
+LIMIT 1;
+```
 
- Q13. Customer Segmentation
+---
 
- Q14. Month-over-Month (MoM) Sales Growth
+# Module 2: Profit Bleeding Analysis
 
- Q15. Most Profitable Routes
+### 4. The Discount Trap
+
+**Business Question:** Which categories and sub-categories suffer profit losses due to high discounts?
+
+```sql
+SELECT category,
+       sub_category,
+       SUM(sales) AS total_sales,
+       SUM(profit) AS total_profit,
+       ROUND(AVG(discount) * 100, 2) AS average_discount
+FROM sales_data1
+GROUP BY category, sub_category
+ORDER BY total_profit;
+```
+
+---
+
+### 5. Regional Return Analysis
+
+**Business Question:** Which region has the highest return rate?
+
+```sql
+SELECT region,
+       COUNT(*) AS total_orders,
+       SUM(
+           CASE
+               WHEN returned = 'Yes' THEN 1
+               ELSE 0
+           END
+       ) AS total_returns,
+       ROUND(
+           SUM(
+               CASE
+                   WHEN returned = 'Yes' THEN 1
+                   ELSE 0
+               END
+           ) * 100.0 / COUNT(*),
+           2
+       ) AS return_percentage
+FROM sales_data1
+GROUP BY region
+ORDER BY total_returns DESC;
+```
+
+---
+
+### 6. Top 10 Loss-Making Customers
+
+**Business Question:** Which customers generate the highest losses?
+
+```sql
+SELECT customer_id,
+       customer_name,
+       SUM(sales) AS total_sales,
+       SUM(profit) AS total_loss
+FROM sales_data1
+GROUP BY customer_id, customer_name
+HAVING SUM(profit) < 0
+ORDER BY total_loss
+LIMIT 10;
+```
+
+---
+
+# Module 3: Supply Chain & Logistics
+
+### 7. Shipping Delay Analysis
+
+**Business Question:** What is the average delivery time for each shipping mode?
+
+```sql
+SELECT ship_mode,
+       ROUND(AVG(ship_date - order_date), 2) AS average_shipping_days
+FROM sales_data1
+GROUP BY ship_mode
+ORDER BY average_shipping_days;
+```
+
+---
+
+### 8. Late Delivery Impact
+
+**Business Question:** Do late deliveries lead to higher product returns?
+
+```sql
+SELECT CASE
+           WHEN ship_date - order_date > 3 THEN 'Late'
+           ELSE 'On Time'
+       END AS delivery_status,
+       COUNT(*) AS total_orders,
+       SUM(
+           CASE
+               WHEN returned = 'Yes' THEN 1
+               ELSE 0
+           END
+       ) AS total_returns,
+       ROUND(
+           SUM(
+               CASE
+                   WHEN returned = 'Yes' THEN 1
+                   ELSE 0
+               END
+           ) * 100.0 / COUNT(*),
+           2
+       ) AS return_rate
+FROM sales_data1
+GROUP BY delivery_status;
+```
+
+---
+
+### 9. Salesperson Performance Analysis
+
+**Business Question:** Which salesperson generates the highest sales and lowest profit margin?
+
+```sql
+SELECT retail_sales_people,
+       SUM(sales) AS total_sales,
+       SUM(profit) AS total_profit,
+       ROUND((SUM(profit) / SUM(sales)) * 100, 2) AS profit_margin
+FROM sales_data1
+GROUP BY retail_sales_people
+ORDER BY profit_margin;
+```
 
 ---
 
